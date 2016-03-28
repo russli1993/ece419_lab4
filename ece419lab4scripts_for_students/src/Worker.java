@@ -10,7 +10,7 @@ import org.apache.zookeeper.Watcher.Event.EventType;
 
 import java.io.IOException;
 
-public class Test {
+public class Worker {
     
     String myPath = "/boss";
     ZkConnector zkc;
@@ -23,7 +23,7 @@ public class Test {
             return;
         }
 
-        Test t = new Test(args[0]);   
+        Worker t = new Worker(args[0]);   
  
         System.out.println("Sleeping...");
         try {
@@ -38,7 +38,7 @@ public class Test {
         }
     }
 
-    public Test(String hosts) {
+    public Worker(String hosts) {
         zkc = new ZkConnector();
         try {
             zkc.connect(hosts);
