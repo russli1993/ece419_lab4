@@ -52,6 +52,7 @@ public class ClientDriver {
 				// TODO: check stat is ok
 				MPacket packet = MPacket.deserialize(data);
 				this.mSocket = new MSocket(packet.host, packet.port);
+				Logger.print("Connected to " + packet.host + ":" + packet.port);
 				MPacket newpack= mSocket.readMPacket();
 				gotIP = true;
 			}
