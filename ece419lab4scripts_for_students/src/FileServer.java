@@ -58,27 +58,31 @@ public class FileServer {
         EventType type = event.getType();
         if(path.equalsIgnoreCase(fsPath)) {
             if (type == EventType.NodeDeleted) {
-                System.out.println(fsPath + " deleted! Let's go!");       
-                checkpath(); // try to become the boss
+                Logger.print(fsPath + " deleted! Let's go!");       
             }
-            if (type == EventType.NodeCreated) {
-                System.out.println(fsPath + " created!");
-                try{ Thread.sleep(100); } catch (Exception e) {}
-                checkpath(); // re-enable the watch
+            else if (type == EventType.NodeCreated) {
+            	Logger.print(fsPath + " created!");
             }
+            else if (type == EventType.NodeDataChanged) {
+            	Logger.print(fsPath + " data changed! None of my business!");
+            }
+            else {
+            	Logger.print(fsPath + " something else happened!");
+            }
+            checkpath();
         }
     }
 
     private void checkpath() {
 		Stat stat = zkc.exists(fsPath, watcher);
 		if (stat == null) { // znode doesn't exist; let's try creating it
-			System.out.println("Creating " + fsPath);
+			Logger.print("Creating " + fsPath);
 			Code ret = zkc.create(fsPath, // Path of znode
 					null, // Data not needed.
 					CreateMode.EPHEMERAL // Znode type, set to EPHEMERAL.
 					);
 			if (ret == Code.OK) {
-				System.out.println("the PRIMARY!");
+				Logger.print("the PRIMARY!");
 				serveRequests();
 			}
         }
@@ -104,7 +108,7 @@ public class FileServer {
 			}
     	}
     	catch (IOException e) {
-    		// TODO: what doooo??
+    		e.printStackTrace();
     	}
     }
 
