@@ -1,6 +1,12 @@
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.Reader;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
 
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException;
@@ -21,6 +27,10 @@ public class FileServer {
 	private String fsPath = "/file_server";
 	private String dictDir = "";
 
+	public String host = null;
+	public int port = -1;
+	private ServerSocket mServerSocket = null;
+
 	public FileServer(String connectString, String dictDir) throws IOException {
 		this.dictDir = dictDir;
         this.zkc = new ZkConnector();
@@ -37,6 +47,10 @@ public class FileServer {
                 handleEvent(event);
             }
         };
+
+		this.mServerSocket = new ServerSocket();
+		this.port = mServerSocket.getLocalPort();
+		this.host = InetAddress.getLocalHost().getHostAddress();
 	}
 
     private void handleEvent(WatchedEvent event) {
@@ -49,7 +63,7 @@ public class FileServer {
             }
             if (type == EventType.NodeCreated) {
                 System.out.println(fsPath + " created!");
-                try{ Thread.sleep(5000); } catch (Exception e) {}
+                try{ Thread.sleep(100); } catch (Exception e) {}
                 checkpath(); // re-enable the watch
             }
         }
@@ -65,20 +79,36 @@ public class FileServer {
 					);
 			if (ret == Code.OK) {
 				System.out.println("the PRIMARY!");
-				
-				FileServerListener listener = new FileServerListener();
-				MPacket packet = new MPacket();
-				packet.host = listener.host;
-				packet.port = listener.port;
-				new Thread(listener).start();
-				try {
-					this.zooKeeper.setData(fsPath, MPacket.serialize(packet), -1);
-				} catch (KeeperException | InterruptedException e) {
-					e.printStackTrace();
-				}
+				serveRequests();
 			}
-        } 
+        }
     }
+
+    // Serve requests from worker minions
+    private void serveRequests() {
+		MPacket packet = new MPacket();
+		packet.host = this.host;
+		packet.port = this.port;
+		try {
+			this.zooKeeper.setData(fsPath, MPacket.serialize(packet), -1);
+		} catch (KeeperException | InterruptedException e) {
+			e.printStackTrace();
+		}
+
+		Logger.print("Serving worker requests");
+		try {
+			while (true) {
+				Socket socket = this.mServerSocket.accept();
+				FileServerRequestHandler handler = new FileServerRequestHandler(socket);
+				new Thread(handler).start();
+			}
+    	}
+    	catch (IOException e) {
+    		// TODO: what doooo??
+    	}
+    }
+
+
 
 	public static void main(String[] args) throws IOException {
 		if (args.length != 3) {
@@ -86,7 +116,8 @@ public class FileServer {
 		}
 
 		FileServer fs = new FileServer(args[0], args[1]);
-        fs.checkpath();
+
+		fs.checkpath();
         System.out.println("Sleeping...");
         while (true) {
             try{ Thread.sleep(5000); } catch (Exception e) {}
