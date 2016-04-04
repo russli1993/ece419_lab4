@@ -26,13 +26,15 @@ public class MSocket {
 	
 	public void writeMPacket(MPacket obj) throws IOException {
 		out.writeObject(obj);
+		Logger.print("Socket delivered a packet");
 	}
 
 	public MPacket readMPacket() throws IOException {
 		try {
 			return (MPacket)in.readObject();
 		}
-		catch (ClassNotFoundException e) {
+		catch (Exception e) {
+			e.printStackTrace();
 			return null;
 		}
 	}

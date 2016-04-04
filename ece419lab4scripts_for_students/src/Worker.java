@@ -28,7 +28,7 @@ public class Worker {
             return;
         }
 
-        JobTracker jt = new JobTracker(args[0]);
+        Worker jt = new Worker(args[0]);
         
     }
 
@@ -60,20 +60,23 @@ public class Worker {
     }
     private void registerWithZookeeper(){
     	 try {
+    		
     		 path = zk.create("/workers/", null, acl, CreateMode.EPHEMERAL_SEQUENTIAL);
     		
     		 id = getLastPath(path);
     		 zk.create("/assignments/"+id,null, acl,CreateMode.PERSISTENT);
     		 getAssignment();
     	 } catch(KeeperException e) {
+    		 e.printStackTrace();
     		 exit();
          } catch(Exception e) {
+        	 e.printStackTrace();
              exit();
          } 
     }
     private void getAssignment(){
     	try {
-			List<String> tasks = zk.getChildren("/assignment/" + id, taskWatcher); //there should be only one task
+			List<String> tasks = zk.getChildren("/assignments/" + id, taskWatcher); //there should be only one task
 			
 			
 			for(String task: tasks){
@@ -96,8 +99,11 @@ public class Worker {
     	assignmentId = id +"/"+assignmentId;
     	Stat st = new Stat();
     	System.out.println("processing");
+    	String jobId = "";
     	try {
 			byte[] data = zk.getData("/assignments/"+assignmentId, null, st);
+			MPacket mp = MPacket.deserialize(data);
+			jobId = mp.jobId;
 			System.out.println("got data");
 		} catch (KeeperException | InterruptedException e1) {
 			//this should not happen
@@ -113,10 +119,10 @@ public class Worker {
     	try {
     		//create a result first
     		Stat result_stat = new Stat();
-    		byte[] data = zk.getData("/results/"+assignmentId, null, result_stat);
+    		byte[] data = zk.getData("/results/"+jobId+"/"+getLastPath(assignmentId), null, result_stat);
     		MPacket mp = MPacket.deserialize(data);
     		mp.jobResult = "resuls!";
-    		zk.setData("/results/"+assignmentId, mp.serialize(), result_stat.getVersion());
+    		zk.setData("/results/"+jobId+"/"+getLastPath(assignmentId), mp.serialize(), result_stat.getVersion());
     		
     		//delete the assignment in assigments
     		zk.delete("/assignments/"+assignmentId, st.getVersion());

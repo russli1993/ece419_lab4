@@ -94,7 +94,7 @@ public class ZkConnector implements Watcher {
     		List<String> list = zooKeeper.getChildren(path, wt);
     		List<String> ret = new ArrayList<String>();
     		for (String i : list){
-    			ret.add(path+"/"+i);
+    			ret.add(i);
     		}
     		return ret;
     	}catch(KeeperException e) {
@@ -125,15 +125,17 @@ public class ZkConnector implements Watcher {
     		zooKeeper.delete(path, st.getVersion());
     		return true;
     	}catch(KeeperException e) {
+    		e.printStackTrace();
             return delete(path);
         } catch(Exception e) {
+        	e.printStackTrace();
         	return delete(path);
         }
     }
     protected List<String> getChildren(String path, Watcher wt, boolean base){
     	try{
     		List<String> list = zooKeeper.getChildren(path, wt);
-    		if (base){
+    		if (!base){
 	    		List<String> ret = new ArrayList<String>();
 	    		for (String i : list){
 	    			ret.add(path+"/"+i);

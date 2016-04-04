@@ -49,11 +49,10 @@ public class ClientDriver {
 			try {
 				Stat stat = new Stat();
 				byte[] data = this.zooKeeper.getData(jobTrackerPath, null, stat);
-				// TODO: check stat is ok
+
 				MPacket packet = MPacket.deserialize(data);
 				this.mSocket = new MSocket(packet.host, packet.port);
 				Logger.print("Connected to " + packet.host + ":" + packet.port);
-				MPacket newpack= mSocket.readMPacket();
 				gotIP = true;
 			}
 			catch (KeeperException.NoNodeException e) {
@@ -99,18 +98,24 @@ public class ClientDriver {
 		}
 	}
 
-	private void newJob(String jobType, String jobId) throws IOException {
+	private void newJob(String jobType, String jobId) throws IOException, InterruptedException {
+		Logger.print("Processing new job");
 		MPacket packet = new MPacket();
 		packet.jobType = jobType;
 		packet.jobId = jobId;
+		packet.requestType = Request.NewJob;
 		mSocket.writeMPacket(packet);
+		Thread.sleep(2000);
 	}
 	
 	private void jobStatus(String jobType, String jobId) throws IOException {
+		Logger.print("Checking job status");
 		MPacket packet = new MPacket();
 		packet.jobType = jobType;
 		packet.jobId = jobId;
+		packet.requestType = Request.Status;
 		mSocket.writeMPacket(packet);
+		Logger.print("Waiting for Job Tracker result");
 		MPacket result = mSocket.readMPacket();
 		if (result.jobResult == null || result.jobResult.equals("")) {
 			System.out.println("job in progress");
