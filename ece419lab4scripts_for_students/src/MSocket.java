@@ -16,7 +16,9 @@ public class MSocket {
 		this.in = new ObjectInputStream(socket.getInputStream());
 	}
 
-	public MSocket(Socket socket) throws IOException {
+
+	public MSocket(Socket socket) throws UnknownHostException, IOException {
+
 		this.socket = socket;
 		this.out = new ObjectOutputStream(socket.getOutputStream());
 		this.in = new ObjectInputStream(socket.getInputStream());

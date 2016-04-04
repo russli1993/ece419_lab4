@@ -3,8 +3,13 @@ import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+
+import java.util.HashMap;
+
+
 import java.util.ArrayList;
 import java.util.HashMap;
+
 
 
 public class MPacket implements Serializable {
@@ -18,9 +23,15 @@ public class MPacket implements Serializable {
 	public String host;
 	public int port;
 	
+
+	public HashMap<String, String> data;
+	
+	public Request requestType;
+
 	// for handling workers' partition lookup
 	public int partitionId; // 0 based
 	public ArrayList<String> partition;
+
 
 	public static byte[] serialize(Object obj) {
 	    ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -31,6 +42,18 @@ public class MPacket implements Serializable {
 	    }
 	    catch (Exception e) {
 	    	Logger.print("Cannot serialize object " + obj.toString());
+	    	return null;
+	    }
+	}
+	public byte[] serialize() {
+	    ByteArrayOutputStream out = new ByteArrayOutputStream();
+	    try {
+	    	ObjectOutputStream os = new ObjectOutputStream(out);
+	    	os.writeObject(this);
+	    	return out.toByteArray();
+	    }
+	    catch (Exception e) {
+	    	Logger.print("Cannot serialize object " + this.toString());
 	    	return null;
 	    }
 	}

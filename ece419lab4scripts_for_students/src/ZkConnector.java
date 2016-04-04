@@ -10,8 +10,11 @@ import org.apache.zookeeper.data.ACL;
 import org.apache.zookeeper.data.Stat;
 
 import java.util.concurrent.CountDownLatch;
+import java.util.ArrayList;
 import java.util.List;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
 
 public class ZkConnector implements Watcher {
 
@@ -27,6 +30,8 @@ public class ZkConnector implements Watcher {
 
     /**
      * Connects to ZooKeeper servers specified by hosts.
+     * 
+     * 
      */
     public void connect(String hosts) throws IOException, InterruptedException {
 
@@ -66,12 +71,12 @@ public class ZkConnector implements Watcher {
         return stat;
     }
 
-    protected KeeperException.Code create(String path, String data, CreateMode mode) {
+    protected KeeperException.Code create(String path, byte[] data, CreateMode mode) {
         
         try {
             byte[] byteData = null;
             if(data != null) {
-                byteData = data.getBytes();
+                byteData = data;
             }
             zooKeeper.create(path, byteData, acl, mode);
             
@@ -83,7 +88,66 @@ public class ZkConnector implements Watcher {
         
         return KeeperException.Code.OK;
     }
-
+    
+    protected List<String> getChildren(String path, Watcher wt){
+    	try{
+    		List<String> list = zooKeeper.getChildren(path, wt);
+    		List<String> ret = new ArrayList<String>();
+    		for (String i : list){
+    			ret.add(path+"/"+i);
+    		}
+    		return ret;
+    	}catch(KeeperException e) {
+            return new ArrayList<String>();
+        } catch(Exception e) {
+            return new ArrayList<String>();
+        }
+    }
+    protected byte[] getData(String path, Watcher wt){
+    	try{
+    		Stat st = new Stat();
+    		return zooKeeper.getData(path, wt, st);
+    	}catch(KeeperException e) {
+            return new byte[0];
+        } catch(Exception e) {
+            return new byte[0];
+        }
+    }
+    protected MPacket getDataDes(String path, Watcher wt) throws IOException, ClassNotFoundException{
+    	ByteArrayInputStream in = new ByteArrayInputStream(getData(path,wt));
+    	ObjectInputStream is = new ObjectInputStream(in);
+    	return (MPacket)is.readObject();
+    	
+    }
+    protected boolean delete(String path){
+    	try{
+    		Stat st = zooKeeper.exists(path, null);
+    		zooKeeper.delete(path, st.getVersion());
+    		return true;
+    	}catch(KeeperException e) {
+            return delete(path);
+        } catch(Exception e) {
+        	return delete(path);
+        }
+    }
+    protected List<String> getChildren(String path, Watcher wt, boolean base){
+    	try{
+    		List<String> list = zooKeeper.getChildren(path, wt);
+    		if (base){
+	    		List<String> ret = new ArrayList<String>();
+	    		for (String i : list){
+	    			ret.add(path+"/"+i);
+	    		}
+	    		return ret;
+    		}else{
+    			return list;
+    		}
+    	}catch(KeeperException e) {
+            return new ArrayList<String>();
+        } catch(Exception e) {
+            return new ArrayList<String>();
+        }
+    }
     public void process(WatchedEvent event) {
         // release lock if ZooKeeper is connected.
         if (event.getState() == KeeperState.SyncConnected) {
