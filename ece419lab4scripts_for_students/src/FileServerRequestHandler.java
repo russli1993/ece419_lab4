@@ -11,8 +11,9 @@ public class FileServerRequestHandler implements Runnable {
 	private String dictDir = "lowercase.rand";
 	private MSocket mSocket = null;
 
-	public FileServerRequestHandler(Socket socket) throws IOException {
+	public FileServerRequestHandler(Socket socket, String dictDir) throws IOException {
 		this.mSocket = new MSocket(socket);
+		this.dictDir = dictDir;
 	}
 
     private ArrayList<String> getPartition(int partitionId) {
