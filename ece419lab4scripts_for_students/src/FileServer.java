@@ -48,7 +48,7 @@ public class FileServer {
             }
         };
 
-		this.mServerSocket = new ServerSocket();
+		this.mServerSocket = new ServerSocket(0);
 		this.port = mServerSocket.getLocalPort();
 		this.host = InetAddress.getLocalHost().getHostAddress();
 	}
@@ -99,7 +99,7 @@ public class FileServer {
 		try {
 			while (true) {
 				Socket socket = this.mServerSocket.accept();
-				FileServerRequestHandler handler = new FileServerRequestHandler(socket);
+				FileServerRequestHandler handler = new FileServerRequestHandler(socket, this.dictDir);
 				new Thread(handler).start();
 			}
     	}
@@ -111,8 +111,9 @@ public class FileServer {
 
 
 	public static void main(String[] args) throws IOException {
-		if (args.length != 3) {
+		if (args.length != 2) {
 			Logger.print("Wrong input format. Usage: FileServer host:port dictionary_dir");
+			return;
 		}
 
 		FileServer fs = new FileServer(args[0], args[1]);

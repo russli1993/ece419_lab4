@@ -122,6 +122,7 @@ public class ClientDriver {
 	public static void main(String[] args) throws InterruptedException, KeeperException {
 		if (args.length != 3) {
 			Logger.print("Invalid syntax. Usage: ClientDriver host:port <jobType> <jobId>");
+			return;
 		}
 		String connectString = args[0]; // host info of zooKeeper
 		String jobType = args[1]; // job; status
