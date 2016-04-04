@@ -15,6 +15,12 @@ public class MSocket {
 		this.out = new ObjectOutputStream(socket.getOutputStream());
 		this.in = new ObjectInputStream(socket.getInputStream());
 	}
+
+	public MSocket(Socket socket) throws IOException {
+		this.socket = socket;
+		this.out = new ObjectOutputStream(socket.getOutputStream());
+		this.in = new ObjectInputStream(socket.getInputStream());
+	}
 	
 	public void writeMPacket(MPacket obj) throws IOException {
 		out.writeObject(obj);
@@ -26,6 +32,14 @@ public class MSocket {
 		}
 		catch (ClassNotFoundException e) {
 			return null;
+		}
+	}
+	
+	public void close() {
+		try {
+			this.socket.close();
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 	}
 }
