@@ -46,7 +46,9 @@ public class JobTracker {
 	    	    this.mSock = mSock;
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
+				System.out.println("dfdfadf");
 				e.printStackTrace();
+				return;
 			}
 			
 			while(true){
@@ -115,7 +117,7 @@ public class JobTracker {
             System.out.println("Zookeeper connect failed "+ e.getMessage());
         }
         //start a serverSocket and get the host and port
-        serverSocket = new ServerSocket();
+        serverSocket = new ServerSocket(0);
         host = InetAddress.getLocalHost().getHostAddress();
         port = serverSocket.getLocalPort();
         if (attemptToBecomePrimary()){
